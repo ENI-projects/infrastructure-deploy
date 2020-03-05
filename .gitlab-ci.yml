@@ -1,0 +1,61 @@
+stages:
+    - test
+    - deploy
+
+variables:
+    PROD_KUBECONFIG: prod-kubeconfig.yml
+    RUNNER_IMAGE: registry.gitlab.com/startfleet/gitlab-runner:master
+    
+## Templates ##
+.test-template: &test-template
+    stage: test
+    image: $RUNNER_IMAGE
+    tags:
+        - startfleet
+
+.deploy-template: &deploy-template
+    stage: deploy
+    image: $RUNNER_IMAGE
+    when: manual
+    tags:
+        - startfleet
+
+# build
+build-kubeconfig:
+    stage: build
+    script:
+        - echo $KUBECONFIG | base64 -d | cat $2 > $PROD_KUBECONFIG
+    artifacts:
+      paths:
+      - prod-kubeconfig.yml
+    tags:
+        - startfleet
+
+# Tests
+namespaces-test:
+    <<: *test-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
+
+secrets-test:
+    <<: *test-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
+
+# Deploy
+namespaces-deploy:
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml
+        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
+
+secrets-deploy:
+    <<: *deploy-template
+    script:
+        # armadacar secret
+        - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
+        - kubectl -n armadacar apply -f armadacar-regsecret.yml
