@@ -1,7 +1,9 @@
 stages:
     - build
     - test
-    - deploy
+    - namespaces
+    - secrets
+    - system
 
 variables:
     PROD_KUBECONFIG: prod-kubeconfig.yml
@@ -15,7 +17,6 @@ variables:
         - startfleet
 
 .deploy-template: &deploy-template
-    stage: deploy
     image: $RUNNER_IMAGE
     when: manual
     tags:
@@ -39,6 +40,7 @@ namespaces-test:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml --dry-run=true
 
 secrets-test:
     <<: *test-template
@@ -46,17 +48,49 @@ secrets-test:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
 
-# Deploy
-namespaces-deploy:
+# Deploy namespaces
+armadacar-namespace:
+    stage: namespaces
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
+        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
+hasura-namespace:
+    stage: namespaces
     <<: *deploy-template
     script:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml
-        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
-
-secrets-deploy:
+cert-manager-namespace:
+    stage: namespaces
     <<: *deploy-template
     script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
+
+# Deploy secrets
+armadacar-secret:
+    stage: secrets
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
         # armadacar secret
         - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
         - kubectl -n armadacar apply -f armadacar-regsecret.yml
+
+        # Deploy system
+cert-manager:
+    stage: system
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/system/cert-manager.yaml
+
+cluster-issuer:
+    # step for the cluster issuer for the certificates bc the cert-manager webhook is long to start
+    stage: system
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl -n cert-manager apply -f 03-Kubernetes/system/prod-issuer.yml
