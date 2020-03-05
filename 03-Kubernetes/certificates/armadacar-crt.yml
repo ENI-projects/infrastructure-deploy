@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: armadacar-selfsigned-cert
+  namespace: armadacar
+spec:
+  dnsNames:
+    - armadacar.startfleet.ovh
+  secretName: armadacar-cert-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
