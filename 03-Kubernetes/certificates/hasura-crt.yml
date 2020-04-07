@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: hasura-selfsigned-cert
+  namespace: hasura
+spec:
+  dnsNames:
+    - hasura.startfleet.ovh
+  secretName: hasura-cert-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

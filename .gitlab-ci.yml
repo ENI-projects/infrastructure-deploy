@@ -4,6 +4,7 @@ stages:
     - namespaces
     - secrets
     - system
+    - certificates
 
 variables:
     PROD_KUBECONFIG: prod-kubeconfig.yml
@@ -26,7 +27,7 @@ variables:
 kubeconfig:
     stage: build
     script:
-        - echo $KUBECONFIG | base64 -d | cat $2 > $PROD_KUBECONFIG
+        - echo $KUBECONFIG | base64 -d | cat > $PROD_KUBECONFIG
     artifacts:
       paths:
       - $PROD_KUBECONFIG
@@ -48,6 +49,13 @@ secrets-test:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
 
+certificates-test:
+    <<: *test-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml --dry-run=true
+
 # Deploy namespaces
 armadacar-namespace:
     stage: namespaces
@@ -55,7 +63,6 @@ armadacar-namespace:
     script:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
-        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
 hasura-namespace:
     stage: namespaces
     <<: *deploy-template
@@ -79,7 +86,7 @@ armadacar-secret:
         - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
         - kubectl -n armadacar apply -f armadacar-regsecret.yml
 
-        # Deploy system
+# Deploy system
 cert-manager:
     stage: system
     <<: *deploy-template
@@ -87,6 +94,7 @@ cert-manager:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/system/cert-manager.yaml
 
+# deploy cluster issuer
 cluster-issuer:
     # step for the cluster issuer for the certificates bc the cert-manager webhook is long to start
     stage: system
@@ -94,3 +102,17 @@ cluster-issuer:
     script:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl -n cert-manager apply -f 03-Kubernetes/system/prod-issuer.yml
+# Deploy hasura certificate
+hasura:
+    stage: certificates
+    <<: *deploy-template
+    script: 
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml
+# Deploy armadacar certificate
+armadacar:
+    stage: certificates
+    <<: *deploy-template
+    script: 
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml
