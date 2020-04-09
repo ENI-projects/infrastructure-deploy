@@ -42,6 +42,7 @@ namespaces-test:
         - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml --dry-run=true
 
 secrets-test:
     <<: *test-template
@@ -75,7 +76,12 @@ cert-manager-namespace:
     script:
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
-
+keycloak-namespace:
+    stage: namespaces
+    <<: *deploy-template
+    script:
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml
 # Deploy secrets
 armadacar-secret:
     stage: secrets
@@ -116,3 +122,9 @@ armadacar:
     script: 
         - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml
+keycloak:
+    stage: certificates
+    <<: *deploy-template
+    script: 
+        - export KUBECONFIG=$PROD_KUBECONFIG
+        - kubectl apply -f 03-Kubernetes/certificates/keycloak-crt.yml
