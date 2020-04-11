@@ -12,19 +12,20 @@ variables:
 before_script:
     - mkdir ~/.kube/
     - echo $KUBECONFIG_PROD | base64 -d > ~/.kube/config
+
 ## Templates ##
 .test-template: &test-template
     stage: test
     image: $RUNNER_IMAGE
     tags:
         - startfleet
-
 .deploy-template: &deploy-template
     image: $RUNNER_IMAGE
     when: manual
     tags:
         - startfleet
-# Tests
+
+### Tests ###
 namespaces-test:
     <<: *test-template
     script:
@@ -37,15 +38,16 @@ secrets-test:
     <<: *test-template
     script:
         - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
-        - kubectl apply-f 03-Kubernetes/secrets/keycloak-secret --dry-run=true
+        - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml --dry-run=true
 
 certificates-test:
     <<: *test-template
     script:
         - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/certificates/keycloak-crt.yml --dry-run=true
 
-# Deploy namespaces
+### Deploy namespaces ###
 armadacar-namespace:
     stage: namespaces
     <<: *deploy-template
@@ -66,41 +68,39 @@ keycloak-namespace:
     <<: *deploy-template
     script:
         - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml
-# Deploy secrets
+
+### Deploy secrets ###
 armadacar-secret:
     stage: secrets
     <<: *deploy-template
     script:
-        # armadacar secret
         - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
         - kubectl apply -f armadacar-regsecret.yml
 keycloak-secret:
     stage: secrets
     <<: *deploy-template
     script:
-        # keycloak secrets
-        - kubectl apply -f keycloak-secret.yml
-# Deploy system
+        - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml
+
+### Deploy system ###
 cert-manager:
     stage: system
     <<: *deploy-template
     script:
         - kubectl apply -f 03-Kubernetes/system/cert-manager.yaml
-
-# deploy cluster issuer
 cluster-issuer:
     # step for the cluster issuer for the certificates bc the cert-manager webhook is long to start
     stage: system
     <<: *deploy-template
     script:
         - kubectl apply -f 03-Kubernetes/system/prod-issuer.yml
-# Deploy hasura certificate
+
+### Deploy certificates ###
 hasura:
     stage: certificates
     <<: *deploy-template
     script: 
         - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml
-# Deploy armadacar certificate
 armadacar:
     stage: certificates
     <<: *deploy-template
