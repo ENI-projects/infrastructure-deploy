@@ -9,7 +9,9 @@ stages:
 variables:
     PROD_KUBECONFIG: prod-kubeconfig.yml
     RUNNER_IMAGE: registry.gitlab.com/startfleet/gitlab-runner:v1.1
-    
+before_script:
+    - mkdir ~/.kube/
+    - echo $KUBECONFIG_PROD | base64 -d > ~/.kube/config
 ## Templates ##
 .test-template: &test-template
     stage: test
@@ -22,23 +24,10 @@ variables:
     when: manual
     tags:
         - startfleet
-
-# build
-kubeconfig:
-    stage: build
-    script:
-        - echo $KUBECONFIG | base64 -d | cat > $PROD_KUBECONFIG
-    artifacts:
-      paths:
-      - $PROD_KUBECONFIG
-    tags:
-        - startfleet
-
 # Tests
 namespaces-test:
     <<: *test-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml --dry-run=true
@@ -47,13 +36,12 @@ namespaces-test:
 secrets-test:
     <<: *test-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
+        - kubectl apply-f 03-Kubernetes/secrets/keycloak-secret --dry-run=true
 
 certificates-test:
     <<: *test-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml --dry-run=true
 
@@ -62,42 +50,41 @@ armadacar-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
 hasura-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml
 cert-manager-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
 keycloak-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml
 # Deploy secrets
 armadacar-secret:
     stage: secrets
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         # armadacar secret
         - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
-        - kubectl -n armadacar apply -f armadacar-regsecret.yml
-
+        - kubectl apply -f armadacar-regsecret.yml
+keycloak-secret:
+    stage: secrets
+    <<: *deploy-template
+    script:
+        # keycloak secrets
+        - kubectl apply -f keycloak-secret.yml
 # Deploy system
 cert-manager:
     stage: system
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/system/cert-manager.yaml
 
 # deploy cluster issuer
@@ -106,25 +93,21 @@ cluster-issuer:
     stage: system
     <<: *deploy-template
     script:
-        - export KUBECONFIG=$PROD_KUBECONFIG
-        - kubectl -n cert-manager apply -f 03-Kubernetes/system/prod-issuer.yml
+        - kubectl apply -f 03-Kubernetes/system/prod-issuer.yml
 # Deploy hasura certificate
 hasura:
     stage: certificates
     <<: *deploy-template
     script: 
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml
 # Deploy armadacar certificate
 armadacar:
     stage: certificates
     <<: *deploy-template
     script: 
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml
 keycloak:
     stage: certificates
     <<: *deploy-template
     script: 
-        - export KUBECONFIG=$PROD_KUBECONFIG
         - kubectl apply -f 03-Kubernetes/certificates/keycloak-crt.yml
