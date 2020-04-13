@@ -33,13 +33,13 @@ namespaces-test:
         - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml --dry-run=true
-
 secrets-test:
     <<: *test-template
     script:
         - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
         - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml --dry-run=true
-
+        - kubectl apply -f 03-Kubernetes/secrets/hasura-app-secret.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/secrets/hasura-connector-secret.yml --dry-run=true
 certificates-test:
     <<: *test-template
     script:
@@ -81,6 +81,12 @@ keycloak-secret:
     <<: *deploy-template
     script:
         - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml
+hasura-secrets:
+    stage: secrets
+    <<: *deploy-template
+    script:
+        - kubectl apply -f 03-Kubernetes/secrets/hasura-app-secret.yml
+        - kubectl apply -f 03-Kubernetes/secrets/hasura-connector-secret.yml
 
 ### Deploy system ###
 cert-manager:
