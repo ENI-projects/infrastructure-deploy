@@ -36,10 +36,7 @@ namespaces-test:
 secrets-test:
     <<: *test-template
     script:
-        - kubectl apply -f 03-Kubernetes/secrets/armadacar-regsecret.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/secrets/hasura-app-secret.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/secrets/hasura-connector-secret.yml --dry-run=true
+        - kubectl apply -f 03-Kubernetes/secrets --dry-run=true
 certificates-test:
     <<: *test-template
     script:
@@ -70,17 +67,18 @@ keycloak-namespace:
         - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml
 
 ### Deploy secrets ###
-armadacar-secret:
+armadacar-secrets:
     stage: secrets
     <<: *deploy-template
     script:
         - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
         - kubectl apply -f armadacar-regsecret.yml
-keycloak-secret:
+keycloak-secrets:
     stage: secrets
     <<: *deploy-template
     script:
         - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml
+        - kubectl apply -f 03-Kubernetes/secrets/keycloak-regsecret.yml
 hasura-secrets:
     stage: secrets
     <<: *deploy-template
