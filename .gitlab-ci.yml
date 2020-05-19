@@ -29,89 +29,88 @@ before_script:
 namespaces-test:
     <<: *test-template
     script:
-        - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml --dry-run=true
+        - kubectl apply -f namespaces/hasura-namespace.yml --dry-run=true
+        - kubectl apply -f namespaces/armadacar-namespace.yml --dry-run=true
+        - kubectl apply -f namespaces/cert-manager-namespace.yml --dry-run=true
+        - kubectl apply -f namespaces/keycloak-namespace.yml --dry-run=true
 secrets-test:
     <<: *test-template
     script:
-        - kubectl apply -f 03-Kubernetes/secrets --dry-run=true
+        - kubectl apply -f secrets --dry-run=true
 certificates-test:
     <<: *test-template
     script:
-        - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml --dry-run=true
-        - kubectl apply -f 03-Kubernetes/certificates/keycloak-crt.yml --dry-run=true
+        - kubectl apply -f certificates/armadacar-crt.yml --dry-run=true
+        - kubectl apply -f certificates/hasura-crt.yml --dry-run=true
+        - kubectl apply -f certificates/keycloak-crt.yml --dry-run=true
 
 ### Deploy namespaces ###
 armadacar-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/namespaces/armadacar-namespace.yml
+        - kubectl apply -f namespaces/armadacar-namespace.yml
 hasura-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/namespaces/hasura-namespace.yml
+        - kubectl apply -f namespaces/hasura-namespace.yml
 cert-manager-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/namespaces/cert-manager-namespace.yml
+        - kubectl apply -f namespaces/cert-manager-namespace.yml
 keycloak-namespace:
     stage: namespaces
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/namespaces/keycloak-namespace.yml
+        - kubectl apply -f namespaces/keycloak-namespace.yml
 
 ### Deploy secrets ###
 armadacar-secrets:
     stage: secrets
     <<: *deploy-template
     script:
-        - envsubst < 03-Kubernetes/secrets/armadacar-regsecret.yml > armadacar-regsecret.yml
         - kubectl apply -f armadacar-regsecret.yml
 keycloak-secrets:
     stage: secrets
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/secrets/keycloak-secret.yml
-        - kubectl apply -f 03-Kubernetes/secrets/keycloak-regsecret.yml
+        - kubectl apply -f secrets/keycloak-secret.yml
+        - kubectl apply -f secrets/keycloak-regsecret.yml
 hasura-secrets:
     stage: secrets
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/secrets/hasura-app-secret.yml
-        - kubectl apply -f 03-Kubernetes/secrets/hasura-connector-secret.yml
+        - kubectl apply -f secrets/hasura-app-secret.yml
+        - kubectl apply -f secrets/hasura-connector-secret.yml
 
 ### Deploy system ###
 cert-manager:
     stage: system
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/system/cert-manager.yaml
+        - kubectl apply -f system/cert-manager.yaml
 cluster-issuer:
     # step for the cluster issuer for the certificates bc the cert-manager webhook is long to start
     stage: system
     <<: *deploy-template
     script:
-        - kubectl apply -f 03-Kubernetes/system/prod-issuer.yml
+        - kubectl apply -f system/prod-issuer.yml
 
 ### Deploy certificates ###
 hasura:
     stage: certificates
     <<: *deploy-template
     script: 
-        - kubectl apply -f 03-Kubernetes/certificates/hasura-crt.yml
+        - kubectl apply -f certificates/hasura-crt.yml
 armadacar:
     stage: certificates
     <<: *deploy-template
     script: 
-        - kubectl apply -f 03-Kubernetes/certificates/armadacar-crt.yml
+        - kubectl apply -f certificates/armadacar-crt.yml
 keycloak:
     stage: certificates
     <<: *deploy-template
     script: 
-        - kubectl apply -f 03-Kubernetes/certificates/keycloak-crt.yml
+        - kubectl apply -f certificates/keycloak-crt.yml
