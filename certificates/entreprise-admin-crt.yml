@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: entreprise-admin-selfsigned-cert
+  namespace: entreprise-admin
+spec:
+  dnsNames:
+    - entreprise-admin.startfleet.ovh
+  secretName: entreprise-admin-cert-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

@@ -29,10 +29,7 @@ before_script:
 namespaces-test:
     <<: *test-template
     script:
-        - kubectl apply -f namespaces/hasura-namespace.yml --dry-run=true
-        - kubectl apply -f namespaces/armadacar-namespace.yml --dry-run=true
-        - kubectl apply -f namespaces/cert-manager-namespace.yml --dry-run=true
-        - kubectl apply -f namespaces/keycloak-namespace.yml --dry-run=true
+        - kubectl apply -f namespaces --dry-run=true
 secrets-test:
     <<: *test-template
     script:
@@ -40,9 +37,7 @@ secrets-test:
 certificates-test:
     <<: *test-template
     script:
-        - kubectl apply -f certificates/armadacar-crt.yml --dry-run=true
-        - kubectl apply -f certificates/hasura-crt.yml --dry-run=true
-        - kubectl apply -f certificates/keycloak-crt.yml --dry-run=true
+        - kubectl apply -f certificates --dry-run=true
 
 ### Deploy namespaces ###
 armadacar-namespace:
@@ -65,13 +60,22 @@ keycloak-namespace:
     <<: *deploy-template
     script:
         - kubectl apply -f namespaces/keycloak-namespace.yml
-
+entreprise-admin-namespace:
+    stage: namespaces
+    <<: *deploy-template
+    script:
+        - kubectl apply -f namespaces/entreprise-admin-namespace.yml
 ### Deploy secrets ###
 armadacar-secrets:
     stage: secrets
     <<: *deploy-template
     script:
-        - kubectl apply -f armadacar-regsecret.yml
+        - kubectl apply -f secrets/armadacar-regsecret.yml
+entreprise-admin-secrets:
+    stage: secrets
+    <<: *deploy-template
+    script:
+        - kubectl apply -f secrets/entreprise-admin-regsecret.yml
 keycloak-secrets:
     stage: secrets
     <<: *deploy-template
@@ -114,3 +118,8 @@ keycloak:
     <<: *deploy-template
     script: 
         - kubectl apply -f certificates/keycloak-crt.yml
+entreprise-admin:
+    stage: certificates
+    <<: *deploy-template
+    script: 
+        - kubectl apply -f certificates/entreprise-admin-crt.yml
