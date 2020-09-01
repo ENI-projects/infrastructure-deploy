@@ -45,6 +45,11 @@ armadacar-namespace:
     <<: *deploy-template
     script:
         - kubectl apply -f namespaces/armadacar-namespace.yml
+user-api-namespace:
+    stage: namespaces
+    <<: *deploy-template
+    script:
+        - kubectl apply -f namespaces/user-api-namespace.yml
 hasura-namespace:
     stage: namespaces
     <<: *deploy-template
@@ -88,7 +93,11 @@ hasura-secrets:
     script:
         - kubectl apply -f secrets/hasura-app-secret.yml
         - kubectl apply -f secrets/hasura-connector-secret.yml
-
+user-api-secrets:
+    stage: secrets
+    <<: *deploy-template
+    script:
+        - kubectl apply -f secrets/user-api-regsecret.yml
 ### Deploy system ###
 cert-manager:
     stage: system
