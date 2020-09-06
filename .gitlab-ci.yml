@@ -8,7 +8,7 @@ stages:
 
 variables:
     PROD_KUBECONFIG: prod-kubeconfig.yml
-    RUNNER_IMAGE: registry.gitlab.com/startfleet/gitlab-runner:v1.1
+    RUNNER_IMAGE: registry.gitlab.com/startfleet/gitlab-runner:v1.3
 before_script:
     - mkdir ~/.kube/
     - echo $KUBECONFIG_PROD | base64 -d > ~/.kube/config
@@ -33,6 +33,8 @@ namespaces-test:
 secrets-test:
     <<: *test-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/armadacar-regsecret.yml secrets/entreprise-admin-regsecret.yml secrets/hasura-app-secret.yml secrets/hasura-connector-secret.yml secrets/keycloak-regsecret.yml secrets/keycloak-secret.yml secrets/user-api-regsecret.yml
         - kubectl apply -f secrets --dry-run=true
 certificates-test:
     <<: *test-template
@@ -75,28 +77,38 @@ armadacar-secrets:
     stage: secrets
     <<: *deploy-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/armadacar-regsecret.yml
         - kubectl apply -f secrets/armadacar-regsecret.yml
 entreprise-admin-secrets:
     stage: secrets
     <<: *deploy-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/entreprise-admin-regsecret.yml
         - kubectl apply -f secrets/entreprise-admin-regsecret.yml
 keycloak-secrets:
     stage: secrets
     <<: *deploy-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/keycloak-secret.yml secrets/keycloak-regsecret.yml
         - kubectl apply -f secrets/keycloak-secret.yml
         - kubectl apply -f secrets/keycloak-regsecret.yml
 hasura-secrets:
     stage: secrets
     <<: *deploy-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/hasura-app-secret.yml secrets/hasura-connector-secret.yml
         - kubectl apply -f secrets/hasura-app-secret.yml
         - kubectl apply -f secrets/hasura-connector-secret.yml
 user-api-secrets:
     stage: secrets
     <<: *deploy-template
     script:
+        - echo $VAULT_PASSWORD > vault_password
+        - ansible-vault decrypt --vault-password-file=vault_password secrets/user-api-regsecret.yml
         - kubectl apply -f secrets/user-api-regsecret.yml
 ### Deploy system ###
 cert-manager:
