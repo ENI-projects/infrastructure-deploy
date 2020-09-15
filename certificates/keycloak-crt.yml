@@ -6,6 +6,7 @@ metadata:
 spec:
   dnsNames:
     - keycloak.startfleet.ovh
+    - login.startfleet.ovh
   secretName: keycloak-cert-tls
   issuerRef:
     name: letsencrypt-prod
