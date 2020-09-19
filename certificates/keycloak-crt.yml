@@ -5,7 +5,6 @@ metadata:
   namespace: keycloak
 spec:
   dnsNames:
-    - keycloak.startfleet.ovh
     - login.startfleet.ovh
   secretName: keycloak-cert-tls
   issuerRef:
